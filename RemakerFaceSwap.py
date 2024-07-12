@@ -53,7 +53,7 @@ def poll_for_result(job_id, api_key):
             if result_json['code'] == 100000 and 'output_image_url' in result_json['result']:
                 return result_json['result']['output_image_url'][0]
             elif result_json['code'] == 300102:  # Image generation in progress
-                time.sleep(5)  # Wait for 5 seconds before polling again
+                time.sleep(0.25)  # Wait for 5 seconds before polling again
             elif result_json['code'] == 300104:  # Image generation failed
                 raise Exception(f"Image generation failed with reason: {result_json['message']['en']}")
             else:
