@@ -53,7 +53,7 @@ def poll_for_result(job_id, api_key):
             if result_json['code'] == 100000 and 'output_image_url' in result_json['result']:
                 return result_json['result']['output_image_url'][0]
             elif result_json['code'] == 300102:  # Image generation in progress
-                time.sleep(0.25)  # Wait for 5 seconds before polling again
+                time.sleep(0.25)  # Wait for 0.25 seconds before polling again
             elif result_json['code'] == 300104:  # Image generation failed
                 raise Exception(f"Image generation failed with reason: {result_json['message']['en']}")
             else:
@@ -70,6 +70,7 @@ class RemakerFaceSwap:
     def INPUT_TYPES(s):
         return {
             "required": {
+                "enabled": ("BOOLEAN", {"default": True, "label_off": "OFF", "label_on": "ON"}),
                 "source_image1": ("IMAGE",),
                 "face_image1": ("IMAGE",),
                 "api_key": ("STRING", {
@@ -88,7 +89,16 @@ class RemakerFaceSwap:
     FUNCTION = "face_swap"
     CATEGORY = "FaceSwap"
 
-    def face_swap(self, source_image1, face_image1, api_key, source_image2=None, face_image2=None):
+    def face_swap(self, enabled, source_image1=None, face_image1=None, api_key=None, source_image2=None, face_image2=None):
+        if not enabled:
+            # Return the original images without doing anything
+            source_image_tensor1 = source_image1
+            source_image_tensor2 = source_image2 if source_image2 is not None else source_image1
+            return (source_image_tensor1, "", source_image_tensor2, "")
+
+        if source_image1 is None or face_image1 is None:
+            raise ValueError("source_image1 and face_image1 are required when enabled is set to True.")
+
         print(f"Input source_image1 type: {type(source_image1)}")
         print(f"Input source_image1 shape: {source_image1.shape if isinstance(source_image1, (np.ndarray, torch.Tensor)) else 'N/A'}")
         print(f"Input face_image1 type: {type(face_image1)}")
